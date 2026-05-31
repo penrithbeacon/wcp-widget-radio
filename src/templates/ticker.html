@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radio Ticker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:transparent;color:var(--text,#e6edf3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;}
+.ticker{display:flex;align-items:center;height:100%;gap:8px;padding:0 10px;overflow:hidden;}
+.icon{color:var(--accent,#f0883e);font-size:14px;flex-shrink:0;}
+.marquee{flex:1;overflow:hidden;white-space:nowrap;}
+.marquee-inner{display:inline-block;animation:scroll 20s linear infinite;}
+.marquee-inner:hover{animation-play-state:paused;}
+@keyframes scroll{0%{transform:translateX(100%)}100%{transform:translateX(-100%)}}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green,#3fb950);flex-shrink:0;display:none;}
+.dot.visible{display:block;}
+</style>
+</head>
+<body>
+<div class="ticker">
+  <div class="dot" id="dot"></div>
+  <span class="icon">📻</span>
+  <div class="marquee"><span class="marquee-inner" id="text">No station playing — click Radio to get started</span></div>
+</div>
+<script>
+window.addEventListener('message', e => {
+  if (e.data?.type === 'radio:state') {
+    const dot = document.getElementById('dot');
+    const text = document.getElementById('text');
+    if (e.data.playing && e.data.name) {
+      dot.className = 'dot visible';
+      text.textContent = '● Now playing: ' + e.data.name;
+    } else {
+      dot.className = 'dot';
+      text.textContent = e.data.name ? e.data.name + ' — stopped' : 'No station playing — click Radio to get started';
+    }
+  }
+});
+</script>
+</body>
+</html>

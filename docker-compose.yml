@@ -1,0 +1,8 @@
+services:
+  radio:
+    build: .
+    image: wcp-widget-radio
+    container_name: wcp-widget-radio
+    ports:
+      - "3741:3741"
+    restart: unless-stopped

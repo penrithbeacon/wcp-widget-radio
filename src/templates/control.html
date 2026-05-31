@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radio Control</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;overflow:hidden;background:transparent;color:var(--text,#e6edf3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;}
+.ctrl{display:flex;align-items:center;gap:8px;height:100%;padding:0 10px;}
+.btn{background:none;border:1px solid var(--border,#30363d);border-radius:6px;color:var(--text,#e6edf3);cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:background .15s;}
+.btn:hover{background:rgba(240,136,62,.15);}
+.btn.playing{color:var(--accent,#f0883e);border-color:var(--accent,#f0883e);}
+.info{flex:1;min-width:0;}
+.sname{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.status{font-size:10px;color:var(--muted,#8b949e);}
+.status.playing{color:var(--green,#3fb950);}
+.btn-open{background:none;border:none;color:var(--muted,#8b949e);cursor:pointer;font-size:16px;padding:0 2px;flex-shrink:0;}
+.btn-open:hover{color:var(--accent,#f0883e);}
+</style>
+</head>
+<body>
+<div class="ctrl">
+  <button class="btn" id="btn-play" onclick="togglePlay()">▶</button>
+  <div class="info">
+    <div class="sname" id="sname">Radio</div>
+    <div class="status" id="status">No station</div>
+  </div>
+  <button class="btn-open" onclick="openFull()" title="Open full player">⤢</button>
+</div>
+<audio id="audio" preload="none"></audio>
+<script>
+const audio = document.getElementById('audio');
+let currentUrl = '', playing = false;
+
+window.addEventListener('message', e => {
+  if (e.data?.type === 'radio:state') {
+    currentUrl = e.data.url;
+    document.getElementById('sname').textContent = e.data.name || 'Radio';
+    if (e.data.playing !== playing) {
+      playing = e.data.playing;
+      sync();
+    }
+  }
+});
+
+function togglePlay() {
+  if (!currentUrl) { openFull(); return; }
+  playing ? stop() : play();
+}
+function play() {
+  audio.src = currentUrl;
+  audio.play().catch(() => {});
+  playing = true; sync();
+  window.parent?.postMessage({ type: 'radio:state', url: currentUrl, playing: true }, '*');
+}
+function stop() {
+  audio.pause(); audio.src = '';
+  playing = false; sync();
+  window.parent?.postMessage({ type: 'radio:state', url: currentUrl, playing: false }, '*');
+}
+function sync() {
+  const btn = document.getElementById('btn-play');
+  const st = document.getElementById('status');
+  btn.textContent = playing ? '⏸' : '▶';
+  btn.className = playing ? 'btn playing' : 'btn';
+  st.className = playing ? 'status playing' : 'status';
+  st.textContent = playing ? '● Live' : (currentUrl ? 'Stopped' : 'No station');
+}
+function openFull() {
+  window.parent?.postMessage({ type: 'wcp:open-window', page: 'full', width: 480, height: 600 }, '*');
+}
+audio.addEventListener('error', () => { playing = false; sync(); });
+</script>
+</body>
+</html>
