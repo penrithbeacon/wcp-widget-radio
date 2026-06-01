@@ -124,6 +124,12 @@ function broadcast() {
 audio.addEventListener('error', () => setStatus('error', 'Stream unavailable'));
 audio.addEventListener('playing', () => setStatus('playing', '● Live'));
 audio.addEventListener('waiting', () => setStatus('', 'Buffering…'));
+// Clear server state when this tab/window is closed so LED goes red
+window.addEventListener('beforeunload', () => {
+  fetch('/widget/api/state', { method: 'POST', keepalive: true,
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ playing: false, station: currentStation?.name||'' }) });
+});
 loadTop();
 </script>
 </body>

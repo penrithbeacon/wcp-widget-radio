@@ -80,7 +80,7 @@ function togglePlay() { playing ? stop() : (currentUrl ? play() : openFull()); }
 function setVol(v) { audio.volume = parseFloat(v); }
 function setStatus(cls, txt) { statusEl.className = 'status ' + cls; statusEl.textContent = txt; }
 function openFull() {
-  window.parent.postMessage({ type: 'wcp:open-window', page: 'full', width: 480, height: 600 }, '*');
+  window.parent.postMessage({ type: 'wcp:open-window', url: window.location.origin + '/widget/full', page: 'full', width: 480, height: 600 }, '*');
 }
 function broadcast() {
   window.parent.postMessage({ type: 'radio:state', url: currentUrl, name: currentName, playing }, '*');
@@ -90,6 +90,19 @@ function broadcast() {
 audio.addEventListener('error', () => setStatus('error', 'Stream unavailable'));
 audio.addEventListener('playing', () => setStatus('playing', '● Live'));
 audio.addEventListener('waiting', () => setStatus('', 'Buffering…'));
+// Poll server state so compact view reflects any playing component
+async function pollState() {
+  try {
+    const r = await fetch('/widget/api/state');
+    const d = await r.json();
+    if (d.station && d.station !== currentName) {
+      document.getElementById('sname').textContent = d.station;
+      document.getElementById('smeta').textContent = d.playing ? '● Playing via another component' : 'Last played';
+      currentName = d.station;
+    }
+  } catch {}
+}
+setInterval(pollState, 4000);
 </script>
 </body>
 </html>

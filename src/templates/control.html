@@ -71,6 +71,11 @@ function openFull() {
   window.parent?.postMessage({ type: 'wcp:open-window', page: 'full', width: 480, height: 600 }, '*');
 }
 audio.addEventListener('error', () => { playing = false; sync(); });
+window.addEventListener('beforeunload', () => {
+  fetch('/widget/api/state', { method: 'POST', keepalive: true,
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ playing: false }) });
+});
 </script>
 </body>
 </html>
