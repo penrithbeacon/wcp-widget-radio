@@ -21,7 +21,7 @@ _state = {"playing": False, "station": "", "country": "", "station_url": ""}
 WCP_MANIFEST = {
     "wcp": "1.3.0",
     "name": "Radio",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Internet radio player. Search thousands of stations, play directly in the dashboard or masthead.",
     "icon": "/widget/icon.svg",
     "health": "/widget/health",
@@ -48,17 +48,20 @@ WCP_MANIFEST = {
         {
             "id": "radio-control", "name": "Radio Control", "role": "control",
             "path": "/widget/control/radio", "icon": "/widget/icon.svg",
-            "mastheadCapable": True, "size": {"min": 40, "max": 60},
+            "mastheadCapable": True,
+            "masthead": {"height": {"min": 40, "max": 60}, "width": {"min": 160, "max": 240}},
         },
         {
             "id": "radio-led", "name": "Playing LED", "role": "control",
             "path": "/widget/led", "icon": "/widget/icon.svg",
-            "mastheadCapable": True, "size": {"min": 40, "max": 60},
+            "mastheadCapable": True,
+            "masthead": {"height": {"min": 40, "max": 60}, "width": {"min": 40, "max": 60}},
         },
         {
             "id": "radio-ticker", "name": "Radio Ticker", "role": "ticker",
             "path": "/widget/ticker", "icon": "/widget/icon.svg",
-            "mastheadCapable": True, "size": {"min": 40, "max": 60},
+            "mastheadCapable": True,
+            "masthead": {"height": {"min": 40, "max": 60}},
         },
     ],
 }
