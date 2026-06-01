@@ -41,24 +41,24 @@ WCP_MANIFEST = {
     ],
     "components": [
         {
-            "id": "radio-player", "name": "Radio Player", "role": "widget",
+            "id": "radio-player", "uuid": "fb11989e-c443-4171-9387-068025ded7a4", "name": "Radio Player", "role": "widget",
             "path": "/widget/", "icon": "/widget/icon.svg",
             "renderMode": "iframe", "defaultSize": {"w": 4, "h": 4},
         },
         {
-            "id": "radio-control", "name": "Radio Control", "role": "control",
+            "id": "radio-control", "uuid": "0be9d536-c947-4042-af49-c5d9a2ad2c0f", "name": "Radio Control", "role": "control",
             "path": "/widget/control/radio", "icon": "/widget/icon.svg",
             "mastheadCapable": True,
             "masthead": {"height": {"min": 40, "max": 60}, "width": {"min": 160, "max": 240}},
         },
         {
-            "id": "radio-led", "name": "Playing LED", "role": "control",
+            "id": "radio-led", "uuid": "67c3fb15-eb48-4f60-a7fc-32b9e0a20032", "name": "Playing LED", "role": "control",
             "path": "/widget/led", "icon": "/widget/icon.svg",
             "mastheadCapable": True,
             "masthead": {"height": {"min": 40, "max": 60}, "width": {"min": 40, "max": 60}},
         },
         {
-            "id": "radio-ticker", "name": "Radio Ticker", "role": "ticker",
+            "id": "radio-ticker", "uuid": "5d781e16-5d9c-4b1d-bf0e-85cbd92b08fd", "name": "Radio Ticker", "role": "ticker",
             "path": "/widget/ticker", "icon": "/widget/icon.svg",
             "mastheadCapable": True,
             "masthead": {"height": {"min": 40, "max": 60}},
