@@ -9,7 +9,7 @@ Port: 3741  |  Radio data: Radio Browser API (api.radio-browser.info)
 Specification: https://widgetcontextprotocol.com
 """
 
-import json
+import io, json, zipfile
 import requests
 from flask import Flask, jsonify, render_template, request, Response
 
@@ -127,12 +127,46 @@ def widget_state():
         return jsonify({"ok": True})
     return jsonify(_state)
 
-@app.route("/widget/icon.svg")
-def widget_icon():
-    svg = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
   <path fill="#f0883e" d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707zm2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708zm5.656-5.656a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.314.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zm-2.12 2.121a.5.5 0 0 1 .707 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.707-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>
 </svg>"""
-    return Response(svg, mimetype="image/svg+xml")
+
+@app.route("/widget/icon.svg")
+def widget_icon():
+    return Response(ICON_SVG, mimetype="image/svg+xml")
+
+@app.route("/widget/api/guids")
+def api_guids():
+    return jsonify({"components": [
+        {"id": c["id"], "uuid": c["uuid"], "name": c["name"]}
+        for c in WCP_MANIFEST.get("components", [])
+    ]})
+
+@app.route("/widget/export.wcp")
+def export_wcp():
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("manifest.json", json.dumps(WCP_MANIFEST, indent=2))
+        z.writestr("icon.svg", ICON_SVG)
+        z.writestr("DOCKER.md", f"""# {WCP_MANIFEST['name']} — WCP Container
+
+## Pull
+```
+docker pull penrithbeacon/wcp-widget-radio
+```
+
+## Run
+```
+docker compose up -d
+```
+
+Port: 3741 | Spec: https://widgetcontextprotocol.com
+""")
+    buf.seek(0)
+    name = WCP_MANIFEST["name"].lower().replace(" ", "-")
+    resp = Response(buf.read(), mimetype="application/zip")
+    resp.headers["Content-Disposition"] = f'attachment; filename="{name}.wcp"'
+    return resp
 
 # ── Radio Browser API proxy ───────────────────────────────────────────────────
 
