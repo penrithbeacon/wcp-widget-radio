@@ -71,6 +71,18 @@ function openFull() {
   window.parent?.postMessage({ type: 'wcp:open-window', url: window.location.origin + '/widget/full', page: 'full', width: 480, height: 600 }, '*');
 }
 audio.addEventListener('error', () => { playing = false; sync(); });
+// Poll server state so control reflects what's playing elsewhere
+async function pollState() {
+  try {
+    const r = await fetch('/widget/api/state');
+    const d = await r.json();
+    if (d.station && !playing) {
+      currentUrl = d.station_url || currentUrl;
+      document.getElementById('sname').textContent = d.station || 'Radio';
+    }
+  } catch {}
+}
+setInterval(pollState, 4000);
 window.addEventListener('beforeunload', () => {
   fetch('/widget/api/state', { method: 'POST', keepalive: true,
     headers: {'Content-Type':'application/json'},

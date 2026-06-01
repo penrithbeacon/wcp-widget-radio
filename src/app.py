@@ -14,7 +14,7 @@ from flask import Flask, jsonify, render_template, request, Response
 app = Flask(__name__)
 
 # ── State store ──────────────────────────────────────────────────────────────
-_state = {"playing": False, "station": "", "country": ""}
+_state = {"playing": False, "station": "", "country": "", "station_url": ""}
 
 # ── WCP Manifest ─────────────────────────────────────────────────────────────
 
