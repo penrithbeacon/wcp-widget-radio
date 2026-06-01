@@ -84,6 +84,8 @@ function openFull() {
 }
 function broadcast() {
   window.parent.postMessage({ type: 'radio:state', url: currentUrl, name: currentName, playing }, '*');
+  fetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ playing, station: currentName }) }).catch(()=>{});
 }
 audio.addEventListener('error', () => setStatus('error', 'Stream unavailable'));
 audio.addEventListener('playing', () => setStatus('playing', '● Live'));

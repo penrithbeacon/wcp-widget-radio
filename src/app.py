@@ -13,6 +13,9 @@ from flask import Flask, jsonify, render_template, request, Response
 
 app = Flask(__name__)
 
+# ── State store ──────────────────────────────────────────────────────────────
+_state = {"playing": False, "station": "", "country": ""}
+
 # ── WCP Manifest ─────────────────────────────────────────────────────────────
 
 WCP_MANIFEST = {
@@ -48,6 +51,11 @@ WCP_MANIFEST = {
             "mastheadCapable": True, "size": {"min": 40, "max": 60},
         },
         {
+            "id": "radio-led", "name": "Playing LED", "role": "control",
+            "path": "/widget/led", "icon": "/widget/icon.svg",
+            "mastheadCapable": True, "size": {"min": 40, "max": 60},
+        },
+        {
             "id": "radio-ticker", "name": "Radio Ticker", "role": "ticker",
             "path": "/widget/ticker", "icon": "/widget/icon.svg",
             "mastheadCapable": True, "size": {"min": 40, "max": 60},
@@ -75,6 +83,18 @@ def widget_control(): return render_template("control.html", manifest=WCP_MANIFE
 
 @app.route("/widget/ticker")
 def widget_ticker(): return render_template("ticker.html", manifest=WCP_MANIFEST)
+
+@app.route("/widget/led")
+def widget_led(): return render_template("led.html", manifest=WCP_MANIFEST)
+
+@app.route("/widget/api/state", methods=["GET", "POST"])
+def widget_state():
+    global _state
+    if request.method == "POST":
+        data = request.get_json(force=True) or {}
+        _state.update({k: data[k] for k in data if k in _state})
+        return jsonify({"ok": True})
+    return jsonify(_state)
 
 @app.route("/widget/icon.svg")
 def widget_icon():

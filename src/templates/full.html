@@ -118,6 +118,8 @@ function setVol(v) { audio.volume = parseFloat(v); }
 function setStatus(cls, txt) { statusEl.className = 'status ' + cls; statusEl.textContent = txt; }
 function broadcast() {
   window.parent?.postMessage({ type: 'radio:state', url: currentStation?.url||'', name: currentStation?.name||'', playing }, '*');
+  fetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ playing, station: currentStation?.name||'' }) }).catch(()=>{});
 }
 audio.addEventListener('error', () => setStatus('error', 'Stream unavailable'));
 audio.addEventListener('playing', () => setStatus('playing', '● Live'));
