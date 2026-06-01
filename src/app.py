@@ -1,10 +1,12 @@
 """
 WCP Widget: Radio
-Internet radio player with three components:
-  - radio-player  (widget)  — full pinboard card with station search + playback
+Internet radio player with four components:
+  - radio-player  (widget)  — full stave instrument with station search + playback
   - radio-control (control) — masthead control: play/stop + station name
+  - radio-led     (control) — masthead LED: playing/stopped indicator
   - radio-ticker  (ticker)  — masthead ticker: scrolling now-playing strip
 Port: 3741  |  Radio data: Radio Browser API (api.radio-browser.info)
+Specification: https://widgetcontextprotocol.com
 """
 
 import json
@@ -13,15 +15,31 @@ from flask import Flask, jsonify, render_template, request, Response
 
 app = Flask(__name__)
 
+# ── CORS ──────────────────────────────────────────────────────────────────────
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin']  = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = (
+        'Content-Type, Wcp-Instance-Id, Wcp-Dashboard-Id, Wcp-Version'
+    )
+    return response
+
+@app.route('/widget/<path:p>', methods=['OPTIONS'])
+@app.route('/widget/', methods=['OPTIONS'])
+def cors_preflight(p=''):
+    return Response('', status=204)
+
 # ── State store ──────────────────────────────────────────────────────────────
 _state = {"playing": False, "station": "", "country": "", "station_url": ""}
 
 # ── WCP Manifest ─────────────────────────────────────────────────────────────
 
 WCP_MANIFEST = {
-    "wcp": "1.3.0",
+    "wcp": "1.3.1",
     "name": "Radio",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Internet radio player. Search thousands of stations, play directly in the dashboard or masthead.",
     "icon": "/widget/icon.svg",
     "health": "/widget/health",
@@ -70,7 +88,9 @@ WCP_MANIFEST = {
 
 @app.route("/widget/")
 @app.route("/widget/index.html")
-def widget(): return render_template("widget.html", manifest=WCP_MANIFEST)
+def widget():
+    iid = request.headers.get('Wcp-Instance-Id', '')
+    return render_template("widget.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
 
 @app.route("/widget/wcp")
 def widget_wcp(): return jsonify(WCP_MANIFEST)
@@ -79,16 +99,24 @@ def widget_wcp(): return jsonify(WCP_MANIFEST)
 def widget_health(): return jsonify({"status": "ok", "name": WCP_MANIFEST["name"]})
 
 @app.route("/widget/full")
-def widget_full(): return render_template("full.html", manifest=WCP_MANIFEST)
+def widget_full():
+    iid = request.headers.get('Wcp-Instance-Id', '')
+    return render_template("full.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
 
 @app.route("/widget/control/radio")
-def widget_control(): return render_template("control.html", manifest=WCP_MANIFEST)
+def widget_control():
+    iid = request.headers.get('Wcp-Instance-Id', '')
+    return render_template("control.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
 
 @app.route("/widget/ticker")
-def widget_ticker(): return render_template("ticker.html", manifest=WCP_MANIFEST)
+def widget_ticker():
+    iid = request.headers.get('Wcp-Instance-Id', '')
+    return render_template("ticker.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
 
 @app.route("/widget/led")
-def widget_led(): return render_template("led.html", manifest=WCP_MANIFEST)
+def widget_led():
+    iid = request.headers.get('Wcp-Instance-Id', '')
+    return render_template("led.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
 
 @app.route("/widget/api/state", methods=["GET", "POST"])
 def widget_state():
