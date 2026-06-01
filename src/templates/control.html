@@ -68,7 +68,7 @@ function sync() {
   st.textContent = playing ? '● Live' : (currentUrl ? 'Stopped' : 'No station');
 }
 function openFull() {
-  window.parent?.postMessage({ type: 'wcp:open-window', page: 'full', width: 480, height: 600 }, '*');
+  window.parent?.postMessage({ type: 'wcp:open-window', url: window.location.origin + '/widget/full', page: 'full', width: 480, height: 600 }, '*');
 }
 audio.addEventListener('error', () => { playing = false; sync(); });
 window.addEventListener('beforeunload', () => {

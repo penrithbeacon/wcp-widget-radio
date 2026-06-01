@@ -24,19 +24,31 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;color:va
   <div class="marquee"><span class="marquee-inner" id="text">No station playing — click Radio to get started</span></div>
 </div>
 <script>
-window.addEventListener('message', e => {
-  if (e.data?.type === 'radio:state') {
-    const dot = document.getElementById('dot');
-    const text = document.getElementById('text');
-    if (e.data.playing && e.data.name) {
-      dot.className = 'dot visible';
-      text.textContent = '● Now playing: ' + e.data.name;
-    } else {
-      dot.className = 'dot';
-      text.textContent = e.data.name ? e.data.name + ' — stopped' : 'No station playing — click Radio to get started';
-    }
+function updateTicker(playing, name) {
+  const dot = document.getElementById('dot');
+  const text = document.getElementById('text');
+  if (playing && name) {
+    dot.className = 'dot visible';
+    text.textContent = '● Now playing: ' + name;
+  } else {
+    dot.className = 'dot';
+    text.textContent = name ? name + ' — stopped' : 'No station playing — click Radio to get started';
   }
+}
+// Listen for in-page messages
+window.addEventListener('message', e => {
+  if (e.data?.type === 'radio:state') updateTicker(e.data.playing, e.data.name);
 });
+// Also poll server state directly (works when full player is in separate window)
+async function pollState() {
+  try {
+    const r = await fetch('/widget/api/state');
+    const d = await r.json();
+    updateTicker(d.playing, d.station);
+  } catch {}
+}
+pollState();
+setInterval(pollState, 3000);
 </script>
 </body>
 </html>
