@@ -22,14 +22,23 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin']  = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = (
-        'Content-Type, Wcp-Instance-Id, Wcp-Dashboard-Id, Wcp-Version'
+        'Content-Type, Wcp-Instance-Id, Wcp-Dashboard-Id, Wcp-Version, Wcp-Widget-Id'
     )
     return response
 
 @app.route('/widget/<path:p>', methods=['OPTIONS'])
 @app.route('/widget/', methods=['OPTIONS'])
+@app.route('/wcp', methods=['OPTIONS'])
 def cors_preflight(p=''):
     return Response('', status=204)
+
+# ── Instance ID helper ────────────────────────────────────────────────────────
+
+def get_instance_id():
+    iid = request.headers.get("Wcp-Instance-Id", "").strip()
+    if not iid:
+        iid = (request.args.get("wcpInstanceId", "") or "").strip()
+    return iid
 
 # ── State store ──────────────────────────────────────────────────────────────
 _state = {"playing": False, "station": "", "country": "", "station_url": ""}
@@ -37,9 +46,10 @@ _state = {"playing": False, "station": "", "country": "", "station_url": ""}
 # ── WCP Manifest ─────────────────────────────────────────────────────────────
 
 WCP_MANIFEST = {
-    "wcp": "1.3.1",
+    "wcp": "1.4.0",
+    "uuid": "f839cffc-573b-48fd-b7d6-1dc2b1aa8699",
     "name": "Radio",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "Internet radio player. Search thousands of stations, play directly in the dashboard or masthead.",
     "icon": "/widget/icon.svg",
     "health": "/widget/health",
@@ -86,11 +96,25 @@ WCP_MANIFEST = {
 
 # ── WCP Endpoints ─────────────────────────────────────────────────────────────
 
+@app.route("/wcp")
+def container_directory():
+    return jsonify({
+        "type":    "directory",
+        "wcp":     "1.4.0",
+        "widgets": [{
+            "id":          "radio",
+            "uuid":        WCP_MANIFEST["uuid"],
+            "name":        WCP_MANIFEST["name"],
+            "description": WCP_MANIFEST["description"],
+            "icon":        WCP_MANIFEST["icon"],
+            "manifest":    "/widget/wcp",
+        }]
+    })
+
 @app.route("/widget/")
 @app.route("/widget/index.html")
 def widget():
-    iid = request.headers.get('Wcp-Instance-Id', '')
-    return render_template("widget.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
+    return render_template("widget.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
 
 @app.route("/widget/wcp")
 def widget_wcp(): return jsonify(WCP_MANIFEST)
@@ -100,23 +124,19 @@ def widget_health(): return jsonify({"status": "ok", "name": WCP_MANIFEST["name"
 
 @app.route("/widget/full")
 def widget_full():
-    iid = request.headers.get('Wcp-Instance-Id', '')
-    return render_template("full.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
+    return render_template("full.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
 
 @app.route("/widget/control/radio")
 def widget_control():
-    iid = request.headers.get('Wcp-Instance-Id', '')
-    return render_template("control.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
+    return render_template("control.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
 
 @app.route("/widget/ticker")
 def widget_ticker():
-    iid = request.headers.get('Wcp-Instance-Id', '')
-    return render_template("ticker.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
+    return render_template("ticker.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
 
 @app.route("/widget/led")
 def widget_led():
-    iid = request.headers.get('Wcp-Instance-Id', '')
-    return render_template("led.html", manifest=WCP_MANIFEST, wcp_instance_id=iid)
+    return render_template("led.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
 
 @app.route("/widget/api/state", methods=["GET", "POST"])
 def widget_state():
@@ -137,10 +157,13 @@ def widget_icon():
 
 @app.route("/widget/api/guids")
 def api_guids():
-    return jsonify({"components": [
-        {"id": c["id"], "uuid": c["uuid"], "name": c["name"]}
-        for c in WCP_MANIFEST.get("components", [])
-    ]})
+    return jsonify({
+        "uuid": WCP_MANIFEST["uuid"],
+        "components": [
+            {"id": c["id"], "uuid": c["uuid"], "name": c["name"]}
+            for c in WCP_MANIFEST.get("components", [])
+        ]
+    })
 
 @app.route("/widget/export.wcp")
 def export_wcp():

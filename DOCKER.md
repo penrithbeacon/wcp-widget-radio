@@ -45,20 +45,22 @@ This widget exposes four components — a host may deploy any or all of them:
 
 ## WCP Request Headers
 
-This widget supports the WCP 1.3.1 request headers:
+This widget supports the WCP 1.4.0 request headers:
 
 | Header | Required | Description |
 |--------|----------|-------------|
 | `Wcp-Instance-Id` | Required | UUID identifying this widget instance |
 | `Wcp-Dashboard-Id` | Optional | UUID identifying the requesting dashboard |
 | `Wcp-Version` | Optional | Protocol version the dashboard speaks |
+| `Wcp-Widget-Id` | Optional | Widget ID from Container Directory selection |
 
 ## WCP Endpoints
 
 | Endpoint | Description |
 |----------|-------------|
+| `GET /wcp` | WCP 1.4.0 Container Directory |
 | `GET /widget/` | Compact radio player (iframe) |
-| `GET /widget/wcp` | WCP 1.3.1 manifest |
+| `GET /widget/wcp` | WCP 1.4.0 manifest |
 | `GET /widget/health` | Health check |
 | `GET /widget/icon.svg` | Widget icon (SVG) |
 | `GET /widget/full` | Full radio player page |
@@ -74,8 +76,8 @@ This widget supports the WCP 1.3.1 request headers:
 
 | Property | Value |
 |----------|-------|
-| WCP Version | 1.3.1 |
-| Widget Version | 1.2.0 |
+| WCP Version | 1.4.0 |
+| Widget Version | 1.2.1 |
 | Render mode | iframe |
 | Auth | none |
 | Default card size | 4×4 |
@@ -94,6 +96,7 @@ This widget supports the WCP 1.3.1 request headers:
 | Tag | Description |
 |-----|-------------|
 | `latest` | Latest stable release |
+| `1.2.1-wcp1.4.0` | Widget v1.2.1, WCP 1.4.0 — server UUID, Container Directory, Wcp-Widget-Id |
 | `1.2.0-wcp1.3.1` | Widget v1.2.0, WCP 1.3.1 — CORS headers, multi-instance support |
 
 ## Source
