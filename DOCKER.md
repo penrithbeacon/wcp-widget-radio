@@ -45,7 +45,7 @@ This widget exposes four components — a host may deploy any or all of them:
 
 ## WCP Request Headers
 
-This widget supports the WCP 1.5.0 request headers:
+This widget supports the WCP 2.0.0 request headers:
 
 | Header | Required | Description |
 |--------|----------|-------------|
@@ -60,9 +60,9 @@ This widget supports the WCP 1.5.0 request headers:
 
 | Endpoint | Description |
 |----------|-------------|
-| `GET /wcp` | WCP 1.5.0 Container Directory |
+| `GET /wcp` | WCP 2.0.0 Container Directory |
 | `GET /widget/` | Compact radio player (iframe) |
-| `GET /widget/wcp` | WCP 1.5.0 manifest |
+| `GET /widget/wcp` | WCP 2.0.0 manifest |
 | `GET /widget/health` | Health check |
 | `GET /widget/icon.svg` | Widget icon (SVG) |
 | `GET /widget/full` | Full radio player page |
@@ -78,8 +78,8 @@ This widget supports the WCP 1.5.0 request headers:
 
 | Property | Value |
 |----------|-------|
-| WCP Version | 1.5.0 |
-| Widget Version | 1.2.1 |
+| WCP Version | 2.0.0 |
+| Widget Version | 1.3.0 |
 | Render mode | iframe |
 | Auth | none |
 | Default card size | 4×4 |
@@ -98,7 +98,8 @@ This widget supports the WCP 1.5.0 request headers:
 | Tag | Description |
 |-----|-------------|
 | `latest` | Latest stable release |
-| `1.2.1-wcp1.4.0` | Widget v1.2.1, WCP 1.5.0 — server UUID, Container Directory, Wcp-Widget-Id |
+| `1.3.0-wcp2.0.0` | Widget v1.3.0, WCP 2.0.0 — container block, manifest image source |
+| `1.2.1-wcp1.4.0` | Widget v1.2.1, WCP 2.0.0 — server UUID, Container Directory, Wcp-Widget-Id |
 | `1.2.0-wcp1.3.1` | Widget v1.2.0, WCP 1.3.1 — CORS headers, multi-instance support |
 
 ## Source

@@ -77,13 +77,19 @@ def _state_for(key):
 # ── WCP Manifest ─────────────────────────────────────────────────────────────
 
 WCP_MANIFEST = {
-    "wcp": "1.5.0",
+    "wcp": "2.0.0",
     "uuid": "f839cffc-573b-48fd-b7d6-1dc2b1aa8699",
     "name": "Radio",
     "version": "1.3.0",
     "description": "Internet radio player. Search thousands of stations, play directly in the dashboard or masthead.",
     "icon": "/widget/icon.svg",
     "health": "/widget/health",
+    "container": {
+        "image":            "penrithbeacon/wcp-widget-radio",
+        "tag":              "1.3.0-wcp2.0.0",
+        "port":             3741,
+        "defaultLifecycle": "always",
+    },
     "pages": [
         {
             "id": "full",
@@ -131,7 +137,7 @@ WCP_MANIFEST = {
 def container_directory():
     return jsonify({
         "type":    "directory",
-        "wcp":     "1.5.0",
+        "wcp":     "2.0.0",
         "widgets": [{
             "id":          "radio",
             "uuid":        WCP_MANIFEST["uuid"],
