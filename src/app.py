@@ -22,7 +22,8 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Origin']  = '*'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, DELETE, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = (
-        'Content-Type, Wcp-Instance-Id, Wcp-Dashboard-Id, Wcp-Version, Wcp-Widget-Id'
+        'Content-Type, Wcp-Instance-Id, Wcp-Dashboard-Id, Wcp-Version, Wcp-Widget-Id, '
+        'Wcp-Orchestration-Id, Wcp-Application-Id'
     )
     return response
 
@@ -40,16 +41,46 @@ def get_instance_id():
         iid = (request.args.get("wcpInstanceId", "") or "").strip()
     return iid
 
-# ── State store ──────────────────────────────────────────────────────────────
-_state = {"playing": False, "station": "", "country": "", "station_url": ""}
+def get_orchestration_id():
+    oid = request.headers.get("Wcp-Orchestration-Id", "").strip()
+    if not oid:
+        oid = (request.args.get("wcpOrchestrationId", "") or "").strip()
+    return oid
+
+def get_application_id():
+    aid = request.headers.get("Wcp-Application-Id", "").strip()
+    if not aid:
+        aid = (request.args.get("wcpApplicationId", "") or "").strip()
+    return aid
+
+# ── State store (WCP 1.5.0 — keyed by orchestration + application context) ───
+_DEFAULT_STATE = {"playing": False, "station": "", "country": "", "station_url": ""}
+_states = {}  # { state_key: {…} }
+
+def get_state_key():
+    """Derive compound state key from WCP 1.5.0 context headers.
+    Pseudocode reference: widgetcontextprotocol.com — WCP Request Headers.
+    """
+    orch_id = get_orchestration_id()
+    app_id  = get_application_id()
+    if orch_id and app_id:
+        return f"{orch_id}:{app_id}"
+    if orch_id:
+        return orch_id
+    return "global"  # fallback for hosts that pre-date WCP 1.5.0
+
+def _state_for(key):
+    if key not in _states:
+        _states[key] = dict(_DEFAULT_STATE)
+    return key
 
 # ── WCP Manifest ─────────────────────────────────────────────────────────────
 
 WCP_MANIFEST = {
-    "wcp": "1.4.0",
+    "wcp": "1.5.0",
     "uuid": "f839cffc-573b-48fd-b7d6-1dc2b1aa8699",
     "name": "Radio",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "description": "Internet radio player. Search thousands of stations, play directly in the dashboard or masthead.",
     "icon": "/widget/icon.svg",
     "health": "/widget/health",
@@ -100,7 +131,7 @@ WCP_MANIFEST = {
 def container_directory():
     return jsonify({
         "type":    "directory",
-        "wcp":     "1.4.0",
+        "wcp":     "1.5.0",
         "widgets": [{
             "id":          "radio",
             "uuid":        WCP_MANIFEST["uuid"],
@@ -114,7 +145,8 @@ def container_directory():
 @app.route("/widget/")
 @app.route("/widget/index.html")
 def widget():
-    return render_template("widget.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
+    return render_template("widget.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+        wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/wcp")
 def widget_wcp(): return jsonify(WCP_MANIFEST)
@@ -124,28 +156,32 @@ def widget_health(): return jsonify({"status": "ok", "name": WCP_MANIFEST["name"
 
 @app.route("/widget/full")
 def widget_full():
-    return render_template("full.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
+    return render_template("full.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+        wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/control/radio")
 def widget_control():
-    return render_template("control.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
+    return render_template("control.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+        wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/ticker")
 def widget_ticker():
-    return render_template("ticker.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
+    return render_template("ticker.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+        wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/led")
 def widget_led():
-    return render_template("led.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id())
+    return render_template("led.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+        wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/api/state", methods=["GET", "POST"])
 def widget_state():
-    global _state
+    key = _state_for(get_state_key())
     if request.method == "POST":
         data = request.get_json(force=True) or {}
-        _state.update({k: data[k] for k in data if k in _state})
+        _states[key].update({k: data[k] for k in data if k in _DEFAULT_STATE})
         return jsonify({"ok": True})
-    return jsonify(_state)
+    return jsonify(_states[key])
 
 ICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
   <path fill="#f0883e" d="M3.05 3.05a7 7 0 0 0 0 9.9.5.5 0 0 1-.707.707 8 8 0 0 1 0-11.314.5.5 0 0 1 .707.707zm2.122 2.122a4 4 0 0 0 0 5.656.5.5 0 1 1-.708.708 5 5 0 0 1 0-7.072.5.5 0 0 1 .708.708zm5.656-5.656a.5.5 0 0 1 .707 0 8 8 0 0 1 0 11.314.5.5 0 0 1-.707-.707 7 7 0 0 0 0-9.9.5.5 0 0 1 0-.707zm-2.12 2.121a.5.5 0 0 1 .707 0 5 5 0 0 1 0 7.072.5.5 0 1 1-.707-.708 4 4 0 0 0 0-5.656.5.5 0 0 1 0-.708zM10 8a2 2 0 1 1-4 0 2 2 0 0 1 4 0z"/>

@@ -15,9 +15,19 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;display:
 <body>
 <div class="led" id="led"></div>
 <script>
+const WCP_ORCHESTRATION_ID = "{{ wcp_orchestration_id|default('', true) }}";
+const WCP_APPLICATION_ID   = "{{ wcp_application_id|default('', true) }}";
+function wcpFetch(url, opts) {
+  opts = opts || {};
+  const extra = {};
+  if (WCP_ORCHESTRATION_ID) extra['Wcp-Orchestration-Id'] = WCP_ORCHESTRATION_ID;
+  if (WCP_APPLICATION_ID)   extra['Wcp-Application-Id']   = WCP_APPLICATION_ID;
+  opts.headers = Object.assign({}, opts.headers || {}, extra);
+  return fetch(url, opts);
+}
 async function poll() {
   try {
-    const r = await fetch('/widget/api/state');
+    const r = await wcpFetch('/widget/api/state');
     const d = await r.json();
     document.getElementById('led').className = d.playing ? 'led playing' : 'led';
   } catch {}

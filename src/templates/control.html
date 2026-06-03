@@ -30,6 +30,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:transparent;color:va
 </div>
 <audio id="audio" preload="none"></audio>
 <script>
+const WCP_ORCHESTRATION_ID = "{{ wcp_orchestration_id|default('', true) }}";
+const WCP_APPLICATION_ID   = "{{ wcp_application_id|default('', true) }}";
+function wcpFetch(url, opts) {
+  opts = opts || {};
+  const extra = {};
+  if (WCP_ORCHESTRATION_ID) extra['Wcp-Orchestration-Id'] = WCP_ORCHESTRATION_ID;
+  if (WCP_APPLICATION_ID)   extra['Wcp-Application-Id']   = WCP_APPLICATION_ID;
+  opts.headers = Object.assign({}, opts.headers || {}, extra);
+  return fetch(url, opts);
+}
 const audio = document.getElementById('audio');
 let currentUrl = '', playing = false;
 
@@ -53,14 +63,14 @@ function play() {
   audio.play().catch(() => {});
   playing = true; sync();
   window.parent?.postMessage({ type: 'radio:state', url: currentUrl, playing: true }, '*');
-  fetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
+  wcpFetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ playing: true, station: document.getElementById('sname').textContent, station_url: currentUrl }) }).catch(()=>{});
 }
 function stop() {
   audio.pause(); audio.src = '';
   playing = false; sync();
   window.parent?.postMessage({ type: 'radio:state', url: currentUrl, playing: false }, '*');
-  fetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
+  wcpFetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ playing: false, station: document.getElementById('sname').textContent }) }).catch(()=>{});
 }
 function sync() {
@@ -72,13 +82,16 @@ function sync() {
   st.textContent = playing ? '● Live' : (currentUrl ? 'Stopped' : 'No station');
 }
 function openFull() {
-  window.parent?.postMessage({ type: 'wcp:open-window', url: window.location.origin + '/widget/full', page: 'full', width: 480, height: 600 }, '*');
+  let fullUrl = window.location.origin + '/widget/full';
+  if (WCP_ORCHESTRATION_ID) fullUrl += '?wcpOrchestrationId=' + encodeURIComponent(WCP_ORCHESTRATION_ID);
+  if (WCP_APPLICATION_ID)   fullUrl += (fullUrl.includes('?') ? '&' : '?') + 'wcpApplicationId=' + encodeURIComponent(WCP_APPLICATION_ID);
+  window.parent?.postMessage({ type: 'wcp:open-window', url: fullUrl, page: 'full', width: 480, height: 600 }, '*');
 }
 audio.addEventListener('error', () => { playing = false; sync(); });
 // Poll server state — only update display/URL if WE are not playing
 async function pollState() {
   try {
-    const r = await fetch('/widget/api/state');
+    const r = await wcpFetch('/widget/api/state');
     const d = await r.json();
     if (!playing) {
       // Not playing locally — reflect server state
@@ -88,14 +101,14 @@ async function pollState() {
     // If WE are playing but server says stopped (e.g. full player closed),
     // re-assert our state so LED and ticker stay green
     if (playing && !d.playing) {
-      fetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
+      wcpFetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ playing: true, station: document.getElementById('sname').textContent, station_url: currentUrl }) }).catch(()=>{});
     }
   } catch {}
 }
 setInterval(pollState, 4000);
 window.addEventListener('beforeunload', () => {
-  fetch('/widget/api/state', { method: 'POST', keepalive: true,
+  wcpFetch('/widget/api/state', { method: 'POST', keepalive: true,
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ playing: false }) });
 });

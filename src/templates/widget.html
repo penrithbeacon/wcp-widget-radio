@@ -34,6 +34,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg,#0d1117);co
 </div>
 <audio id="audio" preload="none"></audio>
 <script>
+const WCP_ORCHESTRATION_ID = "{{ wcp_orchestration_id|default('', true) }}";
+const WCP_APPLICATION_ID   = "{{ wcp_application_id|default('', true) }}";
+function wcpFetch(url, opts) {
+  opts = opts || {};
+  const extra = {};
+  if (WCP_ORCHESTRATION_ID) extra['Wcp-Orchestration-Id'] = WCP_ORCHESTRATION_ID;
+  if (WCP_APPLICATION_ID)   extra['Wcp-Application-Id']   = WCP_APPLICATION_ID;
+  opts.headers = Object.assign({}, opts.headers || {}, extra);
+  return fetch(url, opts);
+}
 const audio = document.getElementById('audio');
 const btnPlay = document.getElementById('btn-play');
 const statusEl = document.getElementById('status');
@@ -80,11 +90,14 @@ function togglePlay() { playing ? stop() : (currentUrl ? play() : openFull()); }
 function setVol(v) { audio.volume = parseFloat(v); }
 function setStatus(cls, txt) { statusEl.className = 'status ' + cls; statusEl.textContent = txt; }
 function openFull() {
-  window.parent.postMessage({ type: 'wcp:open-window', url: window.location.origin + '/widget/full', page: 'full', width: 480, height: 600 }, '*');
+  let fullUrl = window.location.origin + '/widget/full';
+  if (WCP_ORCHESTRATION_ID) fullUrl += '?wcpOrchestrationId=' + encodeURIComponent(WCP_ORCHESTRATION_ID);
+  if (WCP_APPLICATION_ID)   fullUrl += (fullUrl.includes('?') ? '&' : '?') + 'wcpApplicationId=' + encodeURIComponent(WCP_APPLICATION_ID);
+  window.parent.postMessage({ type: 'wcp:open-window', url: fullUrl, page: 'full', width: 480, height: 600 }, '*');
 }
 function broadcast() {
   window.parent.postMessage({ type: 'radio:state', url: currentUrl, name: currentName, playing }, '*');
-  fetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
+  wcpFetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ playing, station: currentName }) }).catch(()=>{});
 }
 audio.addEventListener('error', () => setStatus('error', 'Stream unavailable'));
@@ -93,7 +106,7 @@ audio.addEventListener('waiting', () => setStatus('', 'Buffering…'));
 // Poll server state so compact view reflects any playing component
 async function pollState() {
   try {
-    const r = await fetch('/widget/api/state');
+    const r = await wcpFetch('/widget/api/state');
     const d = await r.json();
     if (d.station && d.station !== currentName) {
       document.getElementById('sname').textContent = d.station;

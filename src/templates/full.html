@@ -51,6 +51,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg,#0d1117);co
 </div>
 <audio id="audio" preload="none"></audio>
 <script>
+const WCP_ORCHESTRATION_ID = "{{ wcp_orchestration_id|default('', true) }}";
+const WCP_APPLICATION_ID   = "{{ wcp_application_id|default('', true) }}";
+function wcpFetch(url, opts) {
+  opts = opts || {};
+  const extra = {};
+  if (WCP_ORCHESTRATION_ID) extra['Wcp-Orchestration-Id'] = WCP_ORCHESTRATION_ID;
+  if (WCP_APPLICATION_ID)   extra['Wcp-Application-Id']   = WCP_APPLICATION_ID;
+  opts.headers = Object.assign({}, opts.headers || {}, extra);
+  return fetch(url, opts);
+}
 const audio = document.getElementById('audio');
 const btnPlay = document.getElementById('btn-play');
 const statusEl = document.getElementById('status');
@@ -118,7 +128,7 @@ function setVol(v) { audio.volume = parseFloat(v); }
 function setStatus(cls, txt) { statusEl.className = 'status ' + cls; statusEl.textContent = txt; }
 function broadcast() {
   window.parent?.postMessage({ type: 'radio:state', url: currentStation?.url||'', name: currentStation?.name||'', playing }, '*');
-  fetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
+  wcpFetch('/widget/api/state', { method: 'POST', headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ playing, station: currentStation?.name||'', station_url: currentStation?.url||'' }) }).catch(()=>{});
 }
 audio.addEventListener('error', () => setStatus('error', 'Stream unavailable'));
@@ -126,7 +136,7 @@ audio.addEventListener('playing', () => setStatus('playing', '● Live'));
 audio.addEventListener('waiting', () => setStatus('', 'Buffering…'));
 // Clear server state when this tab/window is closed so LED goes red
 window.addEventListener('beforeunload', () => {
-  fetch('/widget/api/state', { method: 'POST', keepalive: true,
+  wcpFetch('/widget/api/state', { method: 'POST', keepalive: true,
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ playing: false, station: currentStation?.name||'' }) });
 });
