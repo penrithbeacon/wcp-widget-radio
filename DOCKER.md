@@ -15,7 +15,7 @@ docker run -d \
   --name wcp-widget-radio \
   -p 3741:3741 \
   --restart unless-stopped \
-  penrithbeacon/wcp-widget-radio:latest
+  docker.io/penrithbeacon/wcp-widget-radio:latest
 ```
 
 Then add it to your WCP dashboard at the container's network address.
@@ -25,7 +25,7 @@ Then add it to your WCP dashboard at the container's network address.
 ```yaml
 services:
   radio:
-    image: penrithbeacon/wcp-widget-radio:latest
+    image: docker.io/penrithbeacon/wcp-widget-radio:latest
     container_name: wcp-widget-radio
     ports:
       - "3741:3741"
