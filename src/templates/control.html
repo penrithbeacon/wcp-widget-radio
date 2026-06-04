@@ -43,6 +43,7 @@ function wcpFetch(url, opts) {
 const audio = document.getElementById('audio');
 let currentUrl = '', playing = false;
 
+window.parent?.postMessage({ type: 'wcp:ready' }, '*');
 window.addEventListener('message', e => {
   if (e.data?.type === 'wcp:context' && e.data.theme) {
     for (const [k, v] of Object.entries(e.data.theme))

@@ -134,6 +134,7 @@ function broadcast() {
 audio.addEventListener('error', () => setStatus('error', 'Stream unavailable'));
 audio.addEventListener('playing', () => setStatus('playing', '● Live'));
 audio.addEventListener('waiting', () => setStatus('', 'Buffering…'));
+window.parent?.postMessage({ type: 'wcp:ready' }, '*');
 // Apply theme vars from WCP host context
 window.addEventListener('message', e => {
   if (e.data?.type === 'wcp:context' && e.data.theme) {

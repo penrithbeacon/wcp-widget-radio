@@ -45,6 +45,7 @@ function updateTicker(playing, name) {
     text.textContent = name ? name + ' — stopped' : 'No station playing — click Radio to get started';
   }
 }
+window.parent?.postMessage({ type: 'wcp:ready' }, '*');
 // Listen for in-page messages
 window.addEventListener('message', e => {
   if (e.data?.type === 'wcp:context' && e.data.theme) {
