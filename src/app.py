@@ -134,6 +134,30 @@ WCP_MANIFEST = {
     ],
 }
 
+# ── JSON-LD structured data (injected into every widget template <head>) ──────
+
+WIDGET_JSONLD = json.dumps({
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": WCP_MANIFEST["name"],
+    "softwareVersion": WCP_MANIFEST["version"],
+    "description": WCP_MANIFEST["description"],
+    "identifier": WCP_MANIFEST["uuid"],
+    "applicationCategory": "WCP Widget",
+    "operatingSystem": "Web",
+    "isBasedOn": {
+        "@type": "WebSite",
+        "name": "Widget Context Protocol",
+        "url": "https://widgetcontextprotocol.com",
+    },
+    "additionalProperty": [
+        {"@type": "PropertyValue", "name": "wcpVersion", "value": WCP_MANIFEST["wcp"]},
+        {"@type": "PropertyValue", "name": "containerImage", "value": WCP_MANIFEST["container"]["image"]},
+        {"@type": "PropertyValue", "name": "containerTag", "value": WCP_MANIFEST["container"]["tag"]},
+        {"@type": "PropertyValue", "name": "containerPort", "value": str(WCP_MANIFEST["container"]["port"])},
+    ],
+}, indent=2)
+
 # ── WCP Endpoints ─────────────────────────────────────────────────────────────
 
 @app.route("/wcp")
@@ -154,7 +178,8 @@ def container_directory():
 @app.route("/widget/")
 @app.route("/widget/index.html")
 def widget():
-    return render_template("widget.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+    return render_template("widget.html", manifest=WCP_MANIFEST, jsonld=WIDGET_JSONLD,
+        wcp_instance_id=get_instance_id(),
         wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/wcp")
@@ -197,22 +222,26 @@ def widget_health(): return jsonify({"status": "ok", "name": WCP_MANIFEST["name"
 
 @app.route("/widget/full")
 def widget_full():
-    return render_template("full.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+    return render_template("full.html", manifest=WCP_MANIFEST, jsonld=WIDGET_JSONLD,
+        wcp_instance_id=get_instance_id(),
         wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/control/radio")
 def widget_control():
-    return render_template("control.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+    return render_template("control.html", manifest=WCP_MANIFEST, jsonld=WIDGET_JSONLD,
+        wcp_instance_id=get_instance_id(),
         wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/ticker")
 def widget_ticker():
-    return render_template("ticker.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+    return render_template("ticker.html", manifest=WCP_MANIFEST, jsonld=WIDGET_JSONLD,
+        wcp_instance_id=get_instance_id(),
         wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/led")
 def widget_led():
-    return render_template("led.html", manifest=WCP_MANIFEST, wcp_instance_id=get_instance_id(),
+    return render_template("led.html", manifest=WCP_MANIFEST, jsonld=WIDGET_JSONLD,
+        wcp_instance_id=get_instance_id(),
         wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/api/state", methods=["GET", "POST"])
