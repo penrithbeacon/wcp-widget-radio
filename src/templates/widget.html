@@ -51,6 +51,10 @@ let currentUrl = '', currentName = '', playing = false;
 
 // Listen for station selection from full player
 window.addEventListener('message', e => {
+  if (e.data?.type === 'wcp:context' && e.data.theme) {
+    for (const [k, v] of Object.entries(e.data.theme))
+      document.documentElement.style.setProperty(k, v);
+  }
   if (e.data?.type === 'radio:play') {
     currentUrl = e.data.url;
     currentName = e.data.name;

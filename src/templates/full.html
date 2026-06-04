@@ -134,6 +134,13 @@ function broadcast() {
 audio.addEventListener('error', () => setStatus('error', 'Stream unavailable'));
 audio.addEventListener('playing', () => setStatus('playing', '● Live'));
 audio.addEventListener('waiting', () => setStatus('', 'Buffering…'));
+// Apply theme vars from WCP host context
+window.addEventListener('message', e => {
+  if (e.data?.type === 'wcp:context' && e.data.theme) {
+    for (const [k, v] of Object.entries(e.data.theme))
+      document.documentElement.style.setProperty(k, v);
+  }
+});
 // Clear server state when this tab/window is closed so LED goes red
 window.addEventListener('beforeunload', () => {
   wcpFetch('/widget/api/state', { method: 'POST', keepalive: true,
