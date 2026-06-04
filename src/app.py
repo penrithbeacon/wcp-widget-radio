@@ -9,11 +9,13 @@ Port: 3741  |  Radio data: Radio Browser API (api.radio-browser.info)
 Specification: https://widgetcontextprotocol.com
 """
 
-import io, json, zipfile
+import io, json, os, zipfile
 import requests
 from flask import Flask, jsonify, render_template, request, Response
 
 app = Flask(__name__)
+
+PUBLISHED_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'published', 'index.html')
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 
@@ -77,17 +79,17 @@ def _state_for(key):
 # ── WCP Manifest ─────────────────────────────────────────────────────────────
 
 WCP_MANIFEST = {
-    "wcp": "2.0.0",
+    "wcp": "2.1.0",
     "uuid": "f839cffc-573b-48fd-b7d6-1dc2b1aa8699",
     "name": "Radio",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "description": "Internet radio player. Search thousands of stations, play directly in the dashboard or masthead.",
     "icon": "/widget/icon.svg",
     "health": "/widget/health",
     "container": {
         "image":            "docker.io/penrithbeacon/wcp-widget-radio",
         "source":           {"type": "registry"},
-        "tag":              "1.3.0-wcp2.0.0",
+        "tag":              "1.4.0-wcp2.1.0",
         "port":             3741,
         "defaultLifecycle": "always",
     },
@@ -138,7 +140,7 @@ WCP_MANIFEST = {
 def container_directory():
     return jsonify({
         "type":    "directory",
-        "wcp":     "2.0.0",
+        "wcp":     "2.1.0",
         "widgets": [{
             "id":          "radio",
             "uuid":        WCP_MANIFEST["uuid"],
@@ -156,7 +158,39 @@ def widget():
         wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route("/widget/wcp")
-def widget_wcp(): return jsonify(WCP_MANIFEST)
+def widget_wcp():
+    manifest = dict(WCP_MANIFEST)
+    manifest['web'] = {'published': os.path.exists(PUBLISHED_PATH)}
+    return jsonify(manifest)
+
+@app.route('/')
+def published_spa():
+    if os.path.exists(PUBLISHED_PATH):
+        with open(PUBLISHED_PATH, 'r', encoding='utf-8') as f:
+            return Response(f.read(), mimetype='text/html')
+    return Response('Not Found', status=404, mimetype='text/plain')
+
+@app.route('/widget/publish', methods=['POST'])
+def publish():
+    html = request.get_data(as_text=True)
+    if not html:
+        return jsonify({'success': False, 'error': 'Empty body'}), 400
+    try:
+        os.makedirs(os.path.dirname(PUBLISHED_PATH), exist_ok=True)
+        with open(PUBLISHED_PATH, 'w', encoding='utf-8') as f:
+            f.write(html)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/widget/publish', methods=['DELETE'])
+def unpublish():
+    try:
+        if os.path.exists(PUBLISHED_PATH):
+            os.remove(PUBLISHED_PATH)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route("/widget/health")
 def widget_health(): return jsonify({"status": "ok", "name": WCP_MANIFEST["name"]})

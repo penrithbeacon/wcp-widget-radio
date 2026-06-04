@@ -6,3 +6,5 @@ services:
     ports:
       - "3741:3741"
     restart: unless-stopped
+    volumes:
+      - ./published:/app/published
