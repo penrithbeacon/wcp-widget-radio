@@ -104,6 +104,8 @@ async function pollState() {
       if (d.station) document.getElementById('sname').textContent = d.station;
       if (d.station_url) currentUrl = d.station_url;
     }
+    // Apply volume from shared state
+    if (typeof d.volume === 'number') audio.volume = Math.max(0, Math.min(1, d.volume / 100));
     // If WE are playing but server says stopped (e.g. full player closed),
     // re-assert our state so LED and ticker stay green
     if (playing && !d.playing) {

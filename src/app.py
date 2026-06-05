@@ -56,7 +56,7 @@ def get_application_id():
     return aid
 
 # ── State store (WCP 1.5.0 — keyed by orchestration + application context) ───
-_DEFAULT_STATE = {"playing": False, "station": "", "country": "", "station_url": ""}
+_DEFAULT_STATE = {"playing": False, "station": "", "country": "", "station_url": "", "volume": 80}
 _states = {}  # { state_key: {…} }
 
 def get_state_key():
@@ -130,6 +130,13 @@ WCP_MANIFEST = {
             "path": "/widget/ticker", "icon": "/widget/icon.svg",
             "mastheadCapable": True,
             "masthead": {"height": {"min": 40, "max": 60}},
+        },
+        {
+            "id": "radio-volume", "uuid": "a2c71f8e-9b34-4e60-b1a7-6d0e3f5c8a92", "name": "Volume", "role": "control",
+            "path": "/widget/control/volume", "icon": "/widget/icon.svg",
+            "renderMode": "iframe", "defaultSize": {"w": 1, "h": 1},
+            "mastheadCapable": True,
+            "masthead": {"height": {"min": 40, "max": 60}, "width": {"min": 48, "max": 48}},
         },
     ],
 }
@@ -241,6 +248,12 @@ def widget_ticker():
 @app.route("/widget/led")
 def widget_led():
     return render_template("led.html", manifest=WCP_MANIFEST, jsonld=WIDGET_JSONLD,
+        wcp_instance_id=get_instance_id(),
+        wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
+
+@app.route("/widget/control/volume")
+def widget_volume():
+    return render_template("volume.html", manifest=WCP_MANIFEST, jsonld=WIDGET_JSONLD,
         wcp_instance_id=get_instance_id(),
         wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 

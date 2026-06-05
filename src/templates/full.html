@@ -125,7 +125,11 @@ function stop() {
   setStatus('', '—'); broadcast();
 }
 function togglePlay() { playing ? stop() : (currentStation ? play() : null); }
-function setVol(v) { audio.volume = parseFloat(v); }
+function setVol(v) {
+  audio.volume = parseFloat(v);
+  wcpFetch('/widget/api/state', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ volume: Math.round(parseFloat(v) * 100) }) }).catch(()=>{});
+}
 function setStatus(cls, txt) { statusEl.className = 'status ' + cls; statusEl.textContent = txt; }
 function broadcast() {
   window.parent?.postMessage({ type: 'radio:state', url: currentStation?.url||'', name: currentStation?.name||'', playing }, '*');
@@ -150,6 +154,14 @@ window.addEventListener('beforeunload', () => {
     body: JSON.stringify({ playing: false, station: currentStation?.name||'' }) });
 });
 loadTop();
+// Sync initial volume from shared state
+wcpFetch('/widget/api/state').then(r=>r.json()).then(d => {
+  if (typeof d.volume === 'number') {
+    audio.volume = Math.max(0, Math.min(1, d.volume / 100));
+    const v = document.getElementById('vol');
+    if (v) v.value = d.volume / 100;
+  }
+}).catch(()=>{});
 </script>
 </body>
 </html>

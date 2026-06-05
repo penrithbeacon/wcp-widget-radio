@@ -93,7 +93,11 @@ function stop() {
   broadcast();
 }
 function togglePlay() { playing ? stop() : (currentUrl ? play() : openFull()); }
-function setVol(v) { audio.volume = parseFloat(v); }
+function setVol(v) {
+  audio.volume = parseFloat(v);
+  wcpFetch('/widget/api/state', { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ volume: Math.round(parseFloat(v) * 100) }) }).catch(()=>{});
+}
 function setStatus(cls, txt) { statusEl.className = 'status ' + cls; statusEl.textContent = txt; }
 function openFull() {
   let fullUrl = window.location.origin + '/widget/full';
@@ -118,6 +122,12 @@ async function pollState() {
       document.getElementById('sname').textContent = d.station;
       document.getElementById('smeta').textContent = d.playing ? '● Playing via another component' : 'Last played';
       currentName = d.station;
+    }
+    // Apply volume from shared state
+    if (typeof d.volume === 'number') {
+      audio.volume = Math.max(0, Math.min(1, d.volume / 100));
+      const volEl = document.getElementById('vol');
+      if (volEl && document.activeElement !== volEl) volEl.value = d.volume / 100;
     }
   } catch {}
 }
