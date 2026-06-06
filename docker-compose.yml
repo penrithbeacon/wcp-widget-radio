@@ -5,6 +5,8 @@ services:
     container_name: wcp-widget-radio
     ports:
       - "3741:3741"
+    environment:
+      - CONTAINER_NAME=wcp-widget-radio
     restart: unless-stopped
     volumes:
       - ./published:/app/published
