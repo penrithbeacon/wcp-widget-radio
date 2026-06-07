@@ -111,7 +111,7 @@ WCP_MANIFEST = {
         {
             "id": "radio-player", "uuid": "fb11989e-c443-4171-9387-068025ded7a4", "name": "Radio Player", "role": "widget",
             "path": "/widget/", "icon": "/widget/icon.svg",
-            "renderMode": "iframe", "defaultSize": {"w": 4, "h": 4},
+            "renderMode": "iframe", "defaultSize": {"w": 4, "h": 8},
         },
         {
             "id": "radio-control", "uuid": "0be9d536-c947-4042-af49-c5d9a2ad2c0f", "name": "Radio Control", "role": "control",
@@ -134,7 +134,7 @@ WCP_MANIFEST = {
         {
             "id": "radio-volume", "uuid": "a2c71f8e-9b34-4e60-b1a7-6d0e3f5c8a92", "name": "Volume", "role": "control",
             "path": "/widget/control/volume", "icon": "/widget/icon.svg",
-            "renderMode": "iframe", "defaultSize": {"w": 1, "h": 1},
+            "renderMode": "iframe", "defaultSize": {"w": 1, "h": 2},
             "mastheadCapable": True,
             "masthead": {"height": {"min": 40, "max": 60}, "width": {"min": 48, "max": 48}},
         },
