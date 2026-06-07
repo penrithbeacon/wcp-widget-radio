@@ -8,29 +8,29 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:transparent;
-  color:var(--text,#e6edf3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;}
+  color:var(--wcp-color-text, #e6edf3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;}
 .vol-wrap{height:100%;display:flex;align-items:center;justify-content:center;position:relative;}
 /* Icon button */
-.vol-btn{background:none;border:none;color:var(--muted,#8b949e);cursor:pointer;
+.vol-btn{background:none;border:none;color:var(--wcp-color-text-muted, #8b949e);cursor:pointer;
   padding:4px;border-radius:6px;transition:color .15s,background .15s;line-height:1;display:flex;
   align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;}
-.vol-btn:hover{color:var(--text,#e6edf3);background:rgba(240,136,62,.12);}
-.vol-btn.active{color:var(--accent,#f0883e);}
+.vol-btn:hover{color:var(--wcp-color-text, #e6edf3);background:var(--wcp-color-primary-surface, rgba(240,136,62,.1));}
+.vol-btn.active{color:var(--wcp-color-primary, #f0883e);}
 /* Vertical slider — replaces icon in compact (masthead) mode */
 .vol-vslider{display:none;width:32px;height:100%;align-items:center;justify-content:center;padding:6px 0;}
 .vol-vslider.open{display:flex;}
 .vol-vslider input{-webkit-appearance:slider-vertical;appearance:slider-vertical;writing-mode:bt-lr;
-  width:8px;height:100%;accent-color:var(--accent,#f0883e);cursor:pointer;margin:0;}
+  width:8px;height:100%;accent-color:var(--wcp-color-primary, #f0883e);cursor:pointer;margin:0;}
 /* Horizontal panel — used when there's room (stave context, wide container) */
 .vol-hpanel{display:none;align-items:center;gap:6px;padding:0 8px;height:100%;flex:1;min-width:0;}
 .vol-hpanel.open{display:flex;}
-.vol-icon{font-size:13px;flex-shrink:0;color:var(--muted,#8b949e);line-height:1;user-select:none;}
+.vol-icon{font-size:13px;flex-shrink:0;color:var(--wcp-color-text-muted, #8b949e);line-height:1;user-select:none;}
 .vol-hslider{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:2px;
-  background:var(--border,#30363d);outline:none;cursor:pointer;min-width:40px;}
+  background:var(--wcp-color-border, #30363d);outline:none;cursor:pointer;min-width:40px;}
 .vol-hslider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
-  background:var(--accent,#f0883e);cursor:pointer;border:none;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+  background:var(--wcp-color-primary, #f0883e);cursor:pointer;border:none;box-shadow:0 1px 4px rgba(0,0,0,.3);}
 .vol-hslider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;
-  background:var(--accent,#f0883e);cursor:pointer;border:none;}
+  background:var(--wcp-color-primary, #f0883e);cursor:pointer;border:none;}
 </style>
 </head>
 <body>
@@ -157,9 +157,12 @@ setInterval(pollVolume, 4000);
 
 // WCP context + ready
 window.parent?.postMessage({ type: 'wcp:ready' }, '*');
+window.parent?.postMessage({ type: 'wcp:request-theme' }, '*');
 window.addEventListener('message', e => {
-  if (e.data?.type === 'wcp:context' && e.data.theme) {
-    for (const [k, v] of Object.entries(e.data.theme))
+  const vars = (e.data?.type === 'wcp:context' && e.data.theme) ? e.data.theme
+             : (e.data?.type === 'wcp:theme' && e.data.vars) ? e.data.vars : null;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars))
       document.documentElement.style.setProperty(k, v);
   }
 });

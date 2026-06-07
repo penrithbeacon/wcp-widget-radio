@@ -8,9 +8,9 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;height:100%;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center;}
-.led{width:16px;height:16px;border-radius:50%;background:#f85149;box-shadow:0 0 6px rgba(248,81,73,.5);transition:background .4s,box-shadow .4s;}
-.led.playing{background:#3fb950;box-shadow:0 0 8px rgba(63,185,80,.7);animation:pulse 1.8s ease-in-out infinite;}
-@keyframes pulse{0%,100%{box-shadow:0 0 6px rgba(63,185,80,.5)}50%{box-shadow:0 0 16px rgba(63,185,80,.9)}}
+.led{width:16px;height:16px;border-radius:50%;background:var(--wcp-color-danger);transition:background .4s;filter:drop-shadow(0 0 4px currentColor);}
+.led.playing{background:var(--wcp-color-success);animation:pulse 1.8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{filter:drop-shadow(0 0 4px currentColor)}50%{filter:drop-shadow(0 0 12px currentColor)}}
 </style>
 </head>
 <body>
@@ -36,9 +36,12 @@ async function poll() {
 poll();
 setInterval(poll, 3000);
 window.parent?.postMessage({ type: 'wcp:ready' }, '*');
+window.parent?.postMessage({ type: 'wcp:request-theme' }, '*');
 window.addEventListener('message', e => {
-  if (e.data?.type === 'wcp:context' && e.data.theme) {
-    for (const [k, v] of Object.entries(e.data.theme))
+  const vars = (e.data?.type === 'wcp:context' && e.data.theme) ? e.data.theme
+             : (e.data?.type === 'wcp:theme' && e.data.vars) ? e.data.vars : null;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars))
       document.documentElement.style.setProperty(k, v);
   }
 });
