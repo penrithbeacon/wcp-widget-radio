@@ -82,14 +82,14 @@ WCP_MANIFEST = {
     "wcp": "2.1.0",
     "uuid": "f839cffc-573b-48fd-b7d6-1dc2b1aa8699",
     "name": "Radio",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "description": "Internet radio player. Search thousands of stations, play directly in the dashboard or masthead.",
     "icon": "/widget/icon.svg",
     "health": "/widget/health",
     "container": {
         "image":            "docker.io/penrithbeacon/wcp-widget-radio",
         "source":           {"type": "registry"},
-        "tag":              "1.5.0-wcp2.1.0",
+        "tag":              "1.6.0-wcp2.1.0",
         "port":             3741,
         "defaultLifecycle": "always",
     },
@@ -194,6 +194,12 @@ def widget_wcp():
     manifest = dict(WCP_MANIFEST)
     manifest['web'] = {'published': os.path.exists(PUBLISHED_PATH)}
     return jsonify(manifest)
+
+@app.route("/widget/index")
+def widget_index():
+    return render_template("index-page.html", manifest=WCP_MANIFEST, jsonld=WIDGET_JSONLD,
+        wcp_instance_id=get_instance_id(),
+        wcp_orchestration_id=get_orchestration_id(), wcp_application_id=get_application_id())
 
 @app.route('/')
 def published_spa():
